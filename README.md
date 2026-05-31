@@ -22,6 +22,15 @@ Test status: 1109 automated tests across phases 0-40 (the registered count in `t
 
 *Two FAT32 volumes (FAT32VOL, FAT32VOL2) mounted on the GS/OS Finder desktop under MAME, next to a ProDOS hard drive and 5.25″ floppies — read, written, and browsed like native volumes.*
 
+## Quick Start
+
+[**Download the latest release →**](https://github.com/kpothos/fat32-fst-beta/releases)
+
+- **Try it instantly** — mount `FAT32_FST_GSOS_demo.hdv` in KEGS or MAME and boot; the FST is already installed. Attach a FAT32 volume and it mounts.
+- **Install on your own GS/OS** — copy `FAT32.FST` into the `System/FSTs/` folder (file type `$BD`) and reboot. ([full steps](#how-to-install))
+
+Found a bug? Please file it on the [issue tracker](https://github.com/kpothos/fat32-fst-beta/issues). Full documentation is below.
+
 ## Why This Project
 
 A weekend itch turned into a long project where I was in way over my head. I always wanted to do
@@ -42,11 +51,11 @@ Note: some emulators already provide host filesystem access through their own me
 
 ### On Real Hardware
 
-This is my ultimate goal if I can get it to work, with the understanding that I may never get it right without help from the card makers.
+This is my ultimate goal if I can get it to work, hopefully get it right with help from the card makers.
 
 Modern IIGS mass-storage cards — primarily the popular CFFA3000 and the MicroDrive/Turbo (and other raw-block CF/SD adapters) — run on FAT32-formatted CF or SD cards. Those two are the FST's main targets. Today, you create `.PO` ProDOS disk image files on the card and transfer files into them with tools like CiderPress — managing a filesystem within a filesystem.
 
-That's the problem the FAT32 FST is built to solve. This is the goal, and it is not yet working on real hardware ([details](#real-hardware-status-cffa3000-and-microdrive)) — but here's the workflow it aims for. The card's FAT32 filesystem would become your actual working volume: no more juggling multiple 32 MB ProDOS disk images to fit your files, since a single FAT32 volume could hold everything, up to 2 TB. Pull the CF card from your CFFA3000, plug it into your Mac, copy files directly onto the card, put it back, and they would be in the GS/OS Finder — readable and writable. Edit a file on the IIGS, eject the card, and the changes would be visible on your Mac. Both machines share the same filesystem on the same card: no disk image wrappers, no conversion tools, no 32 MB ceiling. The aim is also to launch apps and games from the FAT32 volume directly, without shuttling them to a ProDOS volume. (See Limitations for more.) Once hardware support lands, that is the experience the FST is designed to deliver; today it is validated under emulation.
+That's the problem the FAT32 FST is built to solve. This is the goal, and it is not yet working on real hardware ([details](#real-hardware-status-cffa3000-and-microdrive)) — but here's the workflow it aims for. The card's FAT32 filesystem would become your actual working volume: no more juggling multiple 32 MB ProDOS disk images to fit your files, since a single FAT32 volume could hold everything, up to 32 GB. Pull the CF card from your CFFA3000, plug it into your Mac, copy files directly onto the card, put it back, and they would be in the GS/OS Finder — readable and writable. Edit a file on the IIGS, eject the card, and the changes would be visible on your Mac. Both machines share the same filesystem on the same card: no disk image wrappers, no conversion tools, no 32 MB ceiling. The aim is also to launch apps and games from the FAT32 volume directly, without shuttling them to a ProDOS volume. (See Limitations for more.) Once hardware support lands, that is the experience the FST is designed to deliver; today it is validated under emulation.
 
 Part of why it's tricky: the card makers built firmware-level workarounds that intercept GS/OS calls and present a disk-image abstraction layer. They did this on purpose, to compensate for GS/OS's lack of native large-volume support — the same gap FAT32 is meant to fill. So these cards are designed to fake large storage by handing GS/OS disk images, and that design works against what the FST needs: the raw FAT32 blocks underneath. Getting raw block mode exposed cleanly means working against the firmware's whole reason for existing. That's the knot I haven't untied yet.
 
