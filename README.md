@@ -388,7 +388,7 @@ Any testing under emulation, and real-world use (browsing, copying, renaming, an
 
 ### FAT32TEST Diagnostic Tool (Optional)
 
-If you want a more thorough test, the `FAT32TEST` application is included in the repository. It's a standalone GS/OS program that runs hundreds of automated tests covering every FST operation — file creation, reading, writing, deletion, renaming, directory traversal, cross-volume copy, checksum verification, cluster leak detection, and more — on both real hardware and emulators, exercising happy paths and many kinds of edge cases.
+If you want a more thorough test, the `FAT32TEST` application will be included in a future update to the distribution. It's a standalone GS/OS program that runs hundreds of automated tests covering every FST operation — file creation, reading, writing, deletion, renaming, directory traversal, cross-volume copy, checksum verification, cluster leak detection, and more — on both real hardware and emulators, exercising happy paths and many kinds of edge cases.
 
 Requirements: 4 MB of RAM. The suite is a large S16 application (~2 MB binary plus working buffers) and runs out of memory below 4 MB, so a stock 1 MB IIGS — or even a 2 MB one — will fail to launch it. A IIGS with a RAM expansion card bringing total RAM to 4 MB (GS-RAM, RamFAST, or similar) is required. KEGS and other emulators default to 8 MB, so this is only a concern on real hardware.
 
