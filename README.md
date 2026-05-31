@@ -8,9 +8,9 @@ KEGS or MAME, and GS/OS reads and writes it like a native volume — so you can
 move files between vintage and modern machines without per-image conversion.
 Support for FAT32 on real storage hardware (CFFA3000, MicroDrive/Turbo) is
 still under development and testing — see
-[Real-Hardware Status](#real-hardware-status-cffa3000-and-microdrive).
+[Real-Hardware Status](#real-hardware-status-cffa3000-and-microdrive).  
 
-Test status: 1109 automated tests across phases 0-40 (the registered count in `tests/test_registry.c`), all passing under emulation. See [Building](#build-requirements) and [FAT32TEST](#fat32test-diagnostic-tool-optional) for how to run them.
+Test status: 1109 automated tests across phases 0-40 (the registered count in `tests/test_registry.c`), all passing under emulation. See [Building](#build-requirements) and [FAT32TEST](#fat32test-diagnostic-tool-optional) for how to run them (Note I have not released Fat32Test app yet.)
 
 > **Alpha software warning.** Active development. Validated under emulation
 > (KEGS and MAME); real-hardware bring-up is in progress but **not yet
@@ -18,9 +18,14 @@ Test status: 1109 automated tests across phases 0-40 (the registered count in `t
 > Don't use as the only copy of important data. Keep backups on a separate
 > ProDOS volume or your host machine.
 
+
 ![A FAT32 volume mounted on the Apple IIGS GS/OS Finder desktop under MAME](docs/FAT32-Finder-demo.png)
 
 *Two FAT32 volumes (FAT32VOL, FAT32VOL2) mounted on the GS/OS Finder desktop under MAME, next to a ProDOS hard drive and 5.25″ floppies — read, written, and browsed like native volumes.*
+
+
+I will release the source code as soon as i tidy things up and ensure all the build scripts are cleanly portable to other dev environments. 
+
 
 ## Quick Start
 
@@ -361,7 +366,7 @@ The FAT32 FST supports full read-write operations on FAT volumes. All core GS/OS
 
 **Tested on:** KEGS (KEGSMAC 1.0 on macOS) and MAME (via Ample 0.287-u2, using its CFFA 2.0 `a2cffa02` card emulation for a raw FAT32 block device), both with GS/OS 6.0.1 and 6.0.4. Real-hardware bring-up on a CFFA3000 is actively underway but does not yet work — see [Real-Hardware Status](#real-hardware-status-cffa3000-and-microdrive).
 
-**Hardware compatibility note:** The FAT32 FST requires that the storage device's driver presents a standard GS/OS block device interface. The FST issues standard block-level Read and Write calls through GS/OS device dispatch — it does not use any vendor-specific commands or firmware features. Storage adapters (CFFA3000, MicroDrive/Turbo, Focus, etc.) must support native block-mode I/O through GS/OS without intercepting or translating filesystem-level calls. Adapters that implement their own FAT translation layer (presenting a ProDOS-style interface instead of raw block access to the FAT volume) will not work with this FST. Part of the hardware smoke testing process is to verify which adapters provide the required raw block access and to compare what the card shows on a Mac/Windows/Linux host with what GS/OS sees through the FST — they must match.
+**Hardware compatibility note ( not yet working):** The FAT32 FST requires that the storage device's driver presents a standard GS/OS block device interface. The FST issues standard block-level Read and Write calls through GS/OS device dispatch — it does not use any vendor-specific commands or firmware features. Storage adapters (CFFA3000, MicroDrive/Turbo, Focus, etc.) must support native block-mode I/O through GS/OS without intercepting or translating filesystem-level calls. Adapters that implement their own FAT translation layer (presenting a ProDOS-style interface instead of raw block access to the FAT volume) will not work with this FST. Part of the hardware smoke testing process is to verify which adapters provide the required raw block access and to compare what the card shows on a Mac/Windows/Linux host with what GS/OS sees through the FST — they must match.
 
 ## What's in the Distribution
 
@@ -388,7 +393,7 @@ Any testing under emulation, and real-world use (browsing, copying, renaming, an
 
 ### FAT32TEST Diagnostic Tool (Optional)
 
-If you want a more thorough test, the `FAT32TEST` application will be included in a future update to the distribution. It's a standalone GS/OS program that runs hundreds of automated tests covering every FST operation — file creation, reading, writing, deletion, renaming, directory traversal, cross-volume copy, checksum verification, cluster leak detection, and more — on both real hardware and emulators, exercising happy paths and many kinds of edge cases.
+If you want a more thorough test, the `FAT32TEST` application is included in the repository. It's a standalone GS/OS program that runs hundreds of automated tests covering every FST operation — file creation, reading, writing, deletion, renaming, directory traversal, cross-volume copy, checksum verification, cluster leak detection, and more — on both real hardware and emulators, exercising happy paths and many kinds of edge cases.
 
 Requirements: 4 MB of RAM. The suite is a large S16 application (~2 MB binary plus working buffers) and runs out of memory below 4 MB, so a stock 1 MB IIGS — or even a 2 MB one — will fail to launch it. A IIGS with a RAM expansion card bringing total RAM to 4 MB (GS-RAM, RamFAST, or similar) is required. KEGS and other emulators default to 8 MB, so this is only a concern on real hardware.
 
@@ -562,7 +567,7 @@ The FST uses a conservative dirty-volume policy. Testing verifies this end-to-en
 
 These checks ensure we never silently allow writes to a potentially-corrupt volume, and never falsely clear a dirty flag that fsck hasn't verified.
 
-#### 5. Cross-Platform Round-Trip Validation (Planned)
+#### 5. Cross-Platform Round-Trip Validation
 
 The on-device test suite validates that the FST correctly implements FAT32 operations within GS/OS. But FAT32 is a shared filesystem — volumes created or modified on the Apple IIGS must be readable by macOS, Windows, and Linux, and vice versa. A new FAT32 implementation needs validation against hardened, battle-tested FAT32 implementations on other platforms.
 
@@ -594,11 +599,11 @@ This cross-platform validation is essential because the FAT32 FST is a new imple
 
 The `FAT32TEST` application is included in the repository and can be run by anyone with a GS/OS 6.0.x boot disk. If you'd like to help test:
 
-1. **Run the automated suite.** Copy `FAT32TEST` to your boot disk, create a fresh 64 MB+ FAT32 volume (see test volume requirements above), and launch `FAT32TEST` from the Finder. It runs unattended and prints results to screen. Send me the log file (`FAT32TEST.LOG` on your boot volume) and/or a photo of the final summary screen — pass count, fail count, and any error details are invaluable.
 
-2. **Do your own real-world testing.** Browse FAT32 volumes in the Finder, copy files between ProDOS and FAT32, create and delete folders, rename files with long names. Report any error dialogs you see — the error code (e.g., `$004E`, `$0011`) and what you were doing when it appeared.
 
-3. **Report filesystem corruption.** After using the FST, run `fsck_msdos -n` on the FAT32 volume from your Mac or Linux machine. If it reports errors, send me the output — this catches cluster leaks and directory inconsistencies that are invisible to the user.
+1. **Do your own real-world testing.** Browse FAT32 volumes in the Finder, copy files between ProDOS and FAT32, create and delete folders, rename files with long names. Report any error dialogs you see — the error code (e.g., `$004E`, `$0011`) and what you were doing when it appeared.
+
+2. **Report filesystem corruption.** After using the FST, run `fsck_msdos -n` on the FAT32 volume from your Mac or Linux machine. If it reports errors, send me the output — this catches cluster leaks and directory inconsistencies that are invisible to the user.
 
 **Important: protect your data.** This is alpha software. Do NOT use the FAT32 FST as your only copy of important files. Always test on volumes you can afford to lose. Keep backups of any data you care about on a separate ProDOS volume or your host machine. The FST has been tested extensively but has not yet been validated on real hardware.
 
@@ -690,6 +695,7 @@ By linking after writing, the worst case on any failure is a cluster leak — ne
 ### Known Limitations
 
 - **Alpha quality.** Read-write operations are implemented but undergoing active testing. Not yet recommended for production use on irreplaceable data.
+- **Real hardware is unproven.** It has not been shown to work yet with the various storage cards — this is a work in progress. 
 - **Large volume display limitations.** The FST supports FAT32 volumes up to 2 TB, but GS/OS's 32-bit block count fields and the Finder's 32-bit arithmetic create display issues on large volumes. The Finder's "About This Disk" free space display overflows at ~2 GB (shows a wrapped incorrect value — same issue that affects HFS). Pre-1989 ProDOS 16 (class 0) applications may read only 16 bits of the block count and report large volumes as full. Copy utilities using 16-bit free-space checks may refuse to copy. ProDOS 8 apps are unaffected (they use the P8 compatibility layer). In all cases, the volume itself works correctly — only displayed values are wrong. I will probably clamp the usable supported volume size to what the GS/OS UI can safely display rather than the full 2 TB the FST supports.
 - **Maximum 4 simultaneous FAT volumes** (`MAX_FAT_VOLS` in `fstdata.c`; raisable to 8). Sufficient for typical IIGS configurations.
 - **Directory cache cap.** Capped at 512 entries (16 KB) to protect memory on 1.25 MB machines. Directories with 500+ visible files fall back to disk reads (where `._` sidecar files may become visible). Sidecar lookup cache is also capped at 512 entries. Adjustable via `DIR_CACHE_MAX_ENTRIES` in `fstops/GetDirEntry.c`.
