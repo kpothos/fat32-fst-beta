@@ -410,10 +410,11 @@ The FAT32 FST supports full read-write operations on FAT volumes. All core GS/OS
 
 ## What's in the Distribution
 
-The download includes two things:
+The download includes three things:
 
 - **FAT32.FST** — the file system translator (release build, ~210 KB). Install it to `System/FSTs/` on your own GS/OS boot disk (see [How to Install](#how-to-install) below).
-- **Turnkey GS/OS image** — a bootable GS/OS disk image with the FST already installed. Mount it in an emulator (MAME, KEGS, or GSplus) and boot — no setup; attach a FAT32 volume and the FST mounts it.
+- **Turnkey GS/OS image** (`FAT32_FST_GSOS_demo.hdv`) — a bootable GS/OS disk image with the FST already installed. Mount it in an emulator (MAME, KEGS, or GSplus) and boot — no setup.
+- **Ready-made FAT32 volume** (`FAT32VOL.hdv`) — an empty FAT32 disk image that mounts clean and read-write, so you don't have to format one yourself. Attach it alongside the boot image and copy files to it. (Prefer to roll your own? See [Creating a FAT32 Volume](#creating-a-fat32-volume-to-mount).)
 
 ## How to Install
 
@@ -711,7 +712,9 @@ If no MBR is found, the FST falls back to superfloppy mode (BPB at sector 0) for
 
 GS/OS can load multiple FSTs that handle the same filesystem type. Apple's original MSDos FST (included with GS/OS 6.0.x) handles FAT12 and FAT16 volumes. This FAT32 FST also handles FAT12 and FAT16, in addition to FAT32.
 
-Apple's MSDos FST registers under `fileSysID = $000A`. This FAT32 FST deliberately registers under `$400A` (the third-party range, sibling to the SMB FST's `$400E`) rather than reusing `$000A`. The reason is a Finder attribute-cache collision: Finder's `CountReadOnlyFSTs` caches per-filesystem read/write attributes keyed by `fileSysID`, so if our writable FST shared `$000A` with Apple's read-only MSDos FST, FAT32 volumes would inherit the read-only classification and Finder would stop saving per-volume window state. A distinct ID keeps the two FSTs independent. (The FAT32 FST still *accepts* `$000A` on non-destructive entry points — JudgeName and the SetFileInfo optionList input gate — so apps hardcoded to the MSDos ID keep working; it just never *reports* `$000A` as its own identity.)
+Apple's MSDos FST registers under `fileSysID = $000A`. This FAT32 FST deliberately registers under `$400A` (the third-party range, sibling to the SMB FST's `$400E`) rather than reusing `$000A`. Reusing Apple's ID is the wrong identity to claim: Apple's MSDos FST is read-only, and the Finder caches read/write capability per filesystem keyed by `fileSysID` (`CountReadOnlyFSTs`). A writable FST sharing `$000A` risks being classified read-only by code that sits above us, in the Finder's cache, where we can't correct it. A distinct ID gives us our own cache slot and keeps the two FSTs independent. (The FAT32 FST still *accepts* `$000A` on non-destructive entry points — JudgeName and the SetFileInfo optionList input gate — so apps hardcoded to the MSDos ID keep working; it just never *reports* `$000A` as its own identity.)
+
+This wasn't the original design: early builds registered under `$000A` to match Apple's MSDos FST, and were switched to `$400A` to avoid the read-only-attribute collision above. Note that the switch is a correctness measure for the co-loaded-FST case, not a proven fix for any specific user-visible bug — in particular, a separate Finder symptom (FAT32 volume windows not reopening after an app launch) was *suspected* to stem from this collision but persists with `$400A`, so its real cause lies elsewhere (likely the app-launch / volume-teardown path) and is still under investigation.
 
 Because the two FSTs use different IDs, they don't collide. If both are present in `System/FSTs/`, each independently scans block devices at boot and the FAT32 FST claims any FAT volume it recognizes — FAT12, FAT16, and FAT32 — so in practice it handles all FAT volumes and Apple's MSDos FST sits idle.
 
