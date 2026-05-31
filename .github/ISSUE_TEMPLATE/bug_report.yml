@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a problem with the FAT32 FST (alpha)
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing the FAT32 FST. The most useful details are your **environment** and **how the FAT32 volume was created**.
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - KEGS (emulator)
+        - MAME (emulator)
+        - GSplus (emulator)
+        - Crossrunner (emulator)
+        - Real hardware (IIGS)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: env-version
+    attributes:
+      label: Emulator / hardware details
+      placeholder: e.g. MAME 0.287 | KEGS 1.0 | ROM 01 + 4 MB | CFFA3000 fw 3.1.1
+    validations:
+      required: true
+  - type: input
+    id: gsos
+    attributes:
+      label: GS/OS version
+      placeholder: 6.0.1 / 6.0.4
+  - type: input
+    id: fst-version
+    attributes:
+      label: FAT32 FST version
+      placeholder: v0.9.0-beta1 (from the release you downloaded)
+    validations:
+      required: true
+  - type: textarea
+    id: volume
+    attributes:
+      label: FAT32 volume
+      description: Size, how it was formatted, and with what tool/OS.
+      placeholder: e.g. 1 GB FAT32 formatted on macOS Disk Utility; or a .hdv built with ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened
+      description: What you did, step by step.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Drag in screenshots. For real-hardware mount failures, an SCC serial boot trace (19200 8N1) is gold.
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Acknowledgement
+      options:
+        - label: This is alpha software and I am not using it as the only copy of important data.
+          required: true
