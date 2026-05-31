@@ -52,7 +52,21 @@ dd if=/dev/zero of=fat32vol.hdv bs=1M count=64
 mkfs.fat -F 32 -s 1 -n FAT32VOL fat32vol.hdv
 ```
 
-Then **attach `fat32vol.hdv` as a hard disk** in your emulator and boot — GS/OS mounts it automatically. In **KEGS**, attach it on **slot 7 (SmartPort)**, *not* the 3.5″ floppy slot; in **MAME**, the storage-card slot.
+**Windows:** simplest with [WSL](https://learn.microsoft.com/windows/wsl/install) — open a Linux shell and run the Linux commands above (`sudo apt install dosfstools` first if `mkfs.fat` is missing). Without WSL, use a free image tool such as [OSFMount](https://www.osforensics.com/tools/mount-disk-images.html): mount a new **empty disk image** of 64 MB, then format it FAT32 from a Command Prompt and dismount —
+```
+format X: /FS:FAT32 /V:FAT32VOL /Q
+```
+replacing `X:` with the drive letter OSFMount assigned. The file is then a raw FAT32 image.
+
+Then attach the image and boot — GS/OS mounts it automatically.
+
+**KEGS:** attach the image as a hard disk on **slot 7 (SmartPort)** — config menu **F4** → Slot 7 — *not* the 3.5″ floppy slot.
+
+**MAME:** put a CFFA2 card in slot 7 with your boot disk and the FAT32 volume:
+```
+mame apple2gs -sl7 cffa202 -hard1 FAT32_FST_GSOS_demo.hdv -hard2 fat32vol.hdv -ramsize 4M
+```
+(`apple2gs` is ROM 03; use `apple2gsr1` for ROM 01. `-hard1` boots GS/OS from the turnkey image; `-hard2` is your FAT32 volume.)
 
 Three things to get right:
 
@@ -697,7 +711,9 @@ If no MBR is found, the FST falls back to superfloppy mode (BPB at sector 0) for
 
 GS/OS can load multiple FSTs that handle the same filesystem type. Apple's original MSDos FST (included with GS/OS 6.0.x) handles FAT12 and FAT16 volumes. This FAT32 FST also handles FAT12 and FAT16, in addition to FAT32.
 
-Both FSTs use `fileSysID = $000A` (MS-DOS). When both are present in `System/FSTs/`, GS/OS loads them in alphabetical order. Since `FAT32.FST` sorts before `MSDos.FST` (F < M), the FAT32 FST gets first chance to mount any FAT volume. In practice, this means the FAT32 FST handles all FAT volumes — FAT12, FAT16, and FAT32 — and Apple's MSDos FST sits idle.
+Apple's MSDos FST registers under `fileSysID = $000A`. This FAT32 FST deliberately registers under `$400A` (the third-party range, sibling to the SMB FST's `$400E`) rather than reusing `$000A`. The reason is a Finder attribute-cache collision: Finder's `CountReadOnlyFSTs` caches per-filesystem read/write attributes keyed by `fileSysID`, so if our writable FST shared `$000A` with Apple's read-only MSDos FST, FAT32 volumes would inherit the read-only classification and Finder would stop saving per-volume window state. A distinct ID keeps the two FSTs independent. (The FAT32 FST still *accepts* `$000A` on non-destructive entry points — JudgeName and the SetFileInfo optionList input gate — so apps hardcoded to the MSDos ID keep working; it just never *reports* `$000A` as its own identity.)
+
+Because the two FSTs use different IDs, they don't collide. If both are present in `System/FSTs/`, each independently scans block devices at boot and the FAT32 FST claims any FAT volume it recognizes — FAT12, FAT16, and FAT32 — so in practice it handles all FAT volumes and Apple's MSDos FST sits idle.
 
 This coexistence is untested and is on the roadmap for validation. If you encounter issues with FAT12 or FAT16 volumes, try removing Apple's `MSDos.FST` from `System/FSTs/` (or renaming it) to ensure only the FAT32 FST handles FAT volumes. Conversely, if you need to fall back to Apple's FST for FAT12/FAT16, remove `FAT32.FST` — it is not required for FAT12/FAT16 support. Please let me know if you run into any issues. 
 
