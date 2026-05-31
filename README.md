@@ -2,14 +2,12 @@
 
 **Author:** KP (2026)
 
-Mount FAT-formatted disks on your Apple IIGS. This FST lets the
-IIGS read and write USB sticks, SD cards, and FAT-formatted hard
-drives — the same filesystem a modern Mac, PC, or Linux box uses.
-The idea is to move files between machines without juggling disk
-images, and to share a single drive across vintage and modern systems
-with no per-image conversion. Today this works under emulation
-(KEGS, MAME); support for modern storage hardware (CFFA3000,
-MicroDrive/Turbo) is the goal but is not yet working — see
+Mount FAT32 volumes on your Apple IIGS — today, in an emulator. Create a
+FAT32 disk image on your Mac, PC, or Linux box, mount it in an emulator like
+KEGS or MAME, and GS/OS reads and writes it like a native volume — so you can
+move files between vintage and modern machines without per-image conversion.
+Support for FAT32 on real storage hardware (CFFA3000, MicroDrive/Turbo) is
+still under development and testing — see
 [Real-Hardware Status](#real-hardware-status-cffa3000-and-microdrive).
 
 Test status: 1109 automated tests across phases 0-40 (the registered count in `tests/test_registry.c`), all passing under emulation. See [Building](#build-requirements) and [FAT32TEST](#fat32test-diagnostic-tool-optional) for how to run them.
