@@ -36,6 +36,32 @@ I will release the source code as soon as i tidy things up and ensure all the bu
 
 Found a bug? Please file it on the [issue tracker](https://github.com/kpothos/fat32-fst-beta/issues). Full documentation is below.
 
+## Creating a FAT32 Volume to Mount
+
+To use the FST you need a FAT32 disk image to mount in the emulator. Any standard FAT32 image works — make one in a few seconds:
+
+**macOS:**
+```
+mkfile 64m fat32vol.hdv                          # a 64 MB image
+newfs_msdos -F 32 -c 1 -v FAT32VOL fat32vol.hdv  # format it FAT32, label FAT32VOL
+```
+
+**Linux:**
+```
+dd if=/dev/zero of=fat32vol.hdv bs=1M count=64
+mkfs.fat -F 32 -s 1 -n FAT32VOL fat32vol.hdv
+```
+
+Then **attach `fat32vol.hdv` as a hard disk** in your emulator and boot — GS/OS mounts it automatically. In **KEGS**, attach it on **slot 7 (SmartPort)**, *not* the 3.5″ floppy slot; in **MAME**, the storage-card slot.
+
+Three things to get right:
+
+- **Make it at least 64 MB**, and use `-c 1` / `-s 1` as shown. Smaller (or coarser-cluster) images format as FAT16 instead of FAT32. FAT16 works, but FAT32 is the tested target; **exFAT will not work**.
+- **Give it a label** (the `-v` / `-n` above). Two mounted volumes with the *same* label → the second one silently won't mount, because GS/OS requires unique volume names.
+- **Close it cleanly.** A volume left dirty (crash or unsafe eject) mounts **read-only**. Clear it with `fsck_msdos -y fat32vol.hdv` (macOS) or `fsck.fat -a fat32vol.hdv` (Linux).
+
+KEGS also accepts `.2mg`/`.po` images; MAME's CFFA2 card wants a raw `.hdv` (no 2MG header) — which the commands above produce.
+
 ## Why This Project
 
 A weekend itch turned into a long project where I was in way over my head. I always wanted to do
@@ -43,7 +69,7 @@ system-level work on the IIGS as a kid but never had the tools or
 references; decades later they're all available, and FAT32 was the
 piece of the platform I most missed. It was a place I could use some existing expertise and learn a bit about GS/OS prgramming. The result is a fully
 read-write FST that gets the IIGS out of the disk-image dance for
-file transfer with modern machines.  
+file transfer with modern machines.  At the bottom of this readme you will find a list of credits/acknowledgements of all the people's great work that I leveraged to build the FST.  
 
 
 ## Why This Matters
